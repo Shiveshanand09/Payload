@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Payload Diagnostics & Security Tool</title>
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <i class="fa-solid fa-gauge-high"></i>
+      </div>
+      <div class="brand-title">PayloadDiagnostics</div>
+    </div>
+    
+    <ul class="nav-links">
+      <li class="nav-item active" data-page="overview">
+        <button id="nav-overview-btn">
+          <i class="fa-solid fa-chart-pie"></i> Dashboard Overview
+        </button>
+      </li>
+      <li class="nav-item" data-page="diagnostics">
+        <button id="nav-diagnostics-btn">
+          <i class="fa-solid fa-code"></i> Diagnostics Suite
+        </button>
+      </li>
+      <li class="nav-item" data-page="security">
+        <button id="nav-security-btn">
+          <i class="fa-solid fa-shield-halved"></i> Security Auditor
+        </button>
+      </li>
+      <li class="nav-item" data-page="client">
+        <button id="nav-client-btn">
+          <i class="fa-solid fa-paper-plane"></i> REST Request Client
+        </button>
+      </li>
+      <li class="nav-item" data-page="diff">
+        <button id="nav-diff-btn">
+          <i class="fa-solid fa-clone"></i> Payload Comparator
+        </button>
+      </li>
+      <li class="nav-item" data-page="schema">
+        <button id="nav-schema-btn">
+          <i class="fa-solid fa-network-wired"></i> Schema Hub
+        </button>
+      </li>
+    </ul>
+    
+    <div class="sidebar-footer">
+      <div>API Payload Diagnostics v1.0</div>
+      <div>Python 3 & FastAPI Service</div>
+      <div style="margin-top: 0.5rem;"><i class="fa-solid fa-shield"></i> Sandbox Protection Active</div>
+    </div>
+  </aside>
+
+  <!-- App Main Content Container -->
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-title">
+        <h1 id="page-title-display">Dashboard Overview</h1>
+      </div>
+      <div class="header-actions">
+        <div class="format-toggle">
+          <button class="format-btn active" id="toggle-json" data-format="json">JSON</button>
+          <button class="format-btn" id="toggle-xml" data-format="xml">XML</button>
+        </div>
+        <div class="system-status">
+          <span class="status-dot"></span>
+          <span>FastAPI Server Connected</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Area -->
+    <main class="content-area">
+
+      <!-- PAGE 1: OVERVIEW -->
+      <section id="page-overview" class="page active">
+        <div class="grid-4">
+          <div class="card stat-widget">
+            <div class="stat-icon purple"><i class="fa-solid fa-file-code"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-total-keys">-</span>
+              <span class="stat-label">Total Fields</span>
+            </div>
+          </div>
+          <div class="card stat-widget">
+            <div class="stat-icon cyan"><i class="fa-solid fa-arrows-spin"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-nesting-depth">-</span>
+              <span class="stat-label">Max Depth</span>
+            </div>
+          </div>
+          <div class="card stat-widget">
+            <div class="stat-icon rose"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-security-issues">-</span>
+              <span class="stat-label">Security Alerts</span>
+            </div>
+          </div>
+          <div class="card stat-widget">
+            <div class="stat-icon emerald"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-health-score">-</span>
+              <span class="stat-label">Hygiene Rating</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <span>Quick Test API Workbench</span>
+              <button class="btn btn-secondary btn-sm" id="btn-load-sample">Load Standard Payload</button>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">
+              Paste or generate an API payload below to analyze formatting, syntax validity, styling consistency, and sensitive info exposures. Toggle JSON/XML format in the top bar.
+            </p>
+            <div class="editor-container" style="height: 320px;">
+              <div class="editor-header">
+                <span>Input Payload Editor</span>
+                <span id="editor-char-counter">0 chars</span>
+              </div>
+              <div class="editor-body">
+                <textarea class="editor-textarea" id="overview-raw-input" placeholder="Paste your payload here..."></textarea>
+              </div>
+              <div class="editor-footer">
+                <div class="editor-actions">
+                  <button class="btn btn-secondary btn-sm" id="btn-overview-format"><i class="fa-solid fa-align-left"></i> Format</button>
+                  <button class="btn btn-secondary btn-sm" id="btn-overview-minify"><i class="fa-solid fa-compress"></i> Minify</button>
+                </div>
+                <button class="btn btn-sm" id="btn-overview-run"><i class="fa-solid fa-wand-magic-sparkles"></i> Run Diagnostics</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Diagnostics Assessment Summary</div>
+            <div id="overview-empty-state" style="text-align: center; padding: 4rem 1rem; color: var(--text-muted);">
+              <i class="fa-solid fa-magnifying-glass-chart" style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary);"></i>
+              <p>No diagnostics processed. Enter a payload and run validation to review.</p>
+            </div>
+            <div id="overview-results-view" style="display: none;">
+              <div class="grid-2" style="margin-bottom: 1rem;">
+                <div>
+                  <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Dominant Case Style</h4>
+                  <div style="font-size: 1.25rem; font-weight: 700; margin-top: 0.25rem;" id="sum-dominant-style">Mixed</div>
+                </div>
+                <div>
+                  <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Style Consistency</h4>
+                  <div style="font-size: 1.25rem; font-weight: 700; margin-top: 0.25rem;" id="sum-style-consistency">0%</div>
+                </div>
+              </div>
+              <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;">Discovered Warnings:</h4>
+                <div id="overview-warnings-list" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Dynamic warning rows -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 2: DIAGNOSTICS SUITE -->
+      <section id="page-diagnostics" class="page">
+        <div class="grid-2">
+          <!-- Payload Editor -->
+          <div class="card">
+            <div class="card-title">Payload Workspace</div>
+            <div class="editor-container">
+              <div class="editor-header">
+                <span>API Payload Raw Content</span>
+              </div>
+              <div class="editor-body">
+                <textarea class="editor-textarea" id="diag-raw-input" placeholder="Paste payload content..."></textarea>
+              </div>
+              <div class="editor-footer">
+                <div class="editor-actions">
+                  <button class="btn btn-secondary btn-sm" id="btn-diag-format">Format</button>
+                  <button class="btn btn-secondary btn-sm" id="btn-diag-clear">Clear</button>
+                </div>
+                <button class="btn btn-sm" id="btn-diag-submit"><i class="fa-solid fa-play"></i> Run Full Check</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diagnostics Dashboard Output -->
+          <div class="card" style="display: flex; flex-direction: column;">
+            <div class="card-title">Structure and Code Style Diagnostics</div>
+            
+            <div id="diag-empty-state" style="text-align: center; padding: 6rem 1rem; color: var(--text-muted); flex: 1;">
+              <i class="fa-solid fa-code-compare" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"></i>
+              <p>Submit payload on the left to see full structure check metrics.</p>
+            </div>
+
+            <div id="diag-results-container" style="display: none; flex: 1;">
+              <div class="grid-3" style="margin-bottom: 1.5rem;">
+                <div class="card" style="padding: 0.75rem; text-align: center; background: rgba(0,0,0,0.15);">
+                  <div style="font-size: 1.25rem; font-weight: 700;" id="metric-nulls">0</div>
+                  <div style="font-size: 0.7rem; color: var(--text-muted);">Null Values</div>
+                </div>
+                <div class="card" style="padding: 0.75rem; text-align: center; background: rgba(0,0,0,0.15);">
+                  <div style="font-size: 1.25rem; font-weight: 700;" id="metric-empty">0</div>
+                  <div style="font-size: 0.7rem; color: var(--text-muted);">Empty Arrays/Objs</div>
+                </div>
+                <div class="card" style="padding: 0.75rem; text-align: center; background: rgba(0,0,0,0.15);">
+                  <div style="font-size: 1.25rem; font-weight: 700;" id="metric-unsafe-floats">0</div>
+                  <div style="font-size: 0.7rem; color: var(--text-muted);">Unsafe JS Integers</div>
+                </div>
+              </div>
+
+              <div class="card-title" style="margin-bottom: 0.75rem; font-size: 0.9rem;">Naming Convention Distribution</div>
+              <div class="naming-style-dist" style="margin-bottom: 1.5rem;" id="naming-bar-chart">
+                <!-- Bar rows inserted dynamically -->
+              </div>
+
+              <div class="card-title" style="margin-bottom: 0.5rem; font-size: 0.9rem;">Cleanliness Warnings</div>
+              <div id="diag-warnings-container" style="max-height: 180px; overflow-y: auto;">
+                <!-- Warnings list -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 3: SECURITY AUDITOR -->
+      <section id="page-security" class="page">
+        <div class="grid-2">
+          <!-- Raw Editor -->
+          <div class="card">
+            <div class="card-title">Security Payload Target</div>
+            <div class="editor-container">
+              <div class="editor-header">
+                <span>Scanner Input</span>
+              </div>
+              <div class="editor-body">
+                <textarea class="editor-textarea" id="sec-raw-input" placeholder="Paste JSON or XML string..."></textarea>
+              </div>
+              <div class="editor-footer">
+                <button class="btn btn-secondary btn-sm" id="btn-sec-sample">Load Sensitive Sample</button>
+                <button class="btn btn-danger btn-sm" id="btn-sec-scan"><i class="fa-solid fa-shield-virus"></i> Run Security Scan</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auditor Outputs -->
+          <div class="card">
+            <div class="card-title">Security Vulnerability Assessment</div>
+            <div id="sec-empty-state" style="text-align: center; padding: 6rem 1rem; color: var(--text-muted);">
+              <i class="fa-solid fa-user-shield" style="font-size: 3rem; margin-bottom: 1rem; color: var(--danger);"></i>
+              <p>Initiate a scan to verify payloads for PII, API token leaks, SQL injection, and XSS risks.</p>
+            </div>
+            
+            <div id="sec-results-container" style="display: none;">
+              <div id="sec-status-header" style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.75rem;">
+                <!-- Status icon and heading -->
+              </div>
+              <div id="sec-findings-list" style="max-height: 320px; overflow-y: auto;">
+                <!-- Vulnerability items -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 4: REST REQUEST CLIENT -->
+      <section id="page-client" class="page">
+        <!-- Client Controller URL -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-title">REST Console</div>
+          <div class="client-control-row">
+            <select class="method-select" id="client-method">
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+              <option>PATCH</option>
+            </select>
+            <input type="text" class="url-input" id="client-url" placeholder="https://api.example.com/v1/users" value="https://httpbin.org/post">
+            <button class="btn btn-accent" id="btn-client-send"><i class="fa-solid fa-paper-plane"></i> Send Request</button>
+          </div>
+        </div>
+
+        <div class="client-section">
+          <!-- Request Params Panel -->
+          <div class="card">
+            <div class="card-title">Request Customization</div>
+            <div style="margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.85rem; font-weight: 600;">HTTP Headers</span>
+                <button class="btn btn-secondary btn-sm" id="btn-add-header"><i class="fa-solid fa-plus"></i> Add Header</button>
+              </div>
+              <div class="headers-editor" id="client-headers-list">
+                <div class="header-row">
+                  <input type="text" placeholder="Content-Type" value="application/json" class="header-key">
+                  <input type="text" placeholder="application/json" value="application/json" class="header-value">
+                  <button class="btn btn-secondary btn-sm btn-danger btn-remove-header" style="padding: 0.5rem;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Request Body (Payload)</div>
+              <div class="editor-container" style="height: 200px;">
+                <textarea class="editor-textarea" id="client-raw-body" placeholder='{"key": "value"}'></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Response Outputs Panel -->
+          <div class="card" style="display: flex; flex-direction: column;">
+            <div class="card-title">
+              <span>Response Metrics</span>
+              <span id="client-status-badge-container"></span>
+            </div>
+            
+            <div id="client-empty-state" style="text-align: center; padding: 6rem 1rem; color: var(--text-muted); flex: 1;">
+              <i class="fa-solid fa-cloud-arrow-down" style="font-size: 3rem; margin-bottom: 1rem; color: var(--accent-cyan);"></i>
+              <p>Configure and launch the request to capture, display, and diagnose response structures.</p>
+            </div>
+
+            <div id="client-results-container" style="display: none; flex: 1;">
+              <div class="grid-3" style="margin-bottom: 1rem;">
+                <div class="card" style="padding: 0.5rem; text-align: center; background: rgba(0,0,0,0.15); border-radius: 8px;">
+                  <div style="font-size: 1.1rem; font-weight: 700;" id="resp-latency">-</div>
+                  <div style="font-size: 0.65rem; color: var(--text-muted);">Latency</div>
+                </div>
+                <div class="card" style="padding: 0.5rem; text-align: center; background: rgba(0,0,0,0.15); border-radius: 8px;">
+                  <div style="font-size: 1.1rem; font-weight: 700;" id="resp-size">-</div>
+                  <div style="font-size: 0.65rem; color: var(--text-muted);">Size</div>
+                </div>
+                <div class="card" style="padding: 0.5rem; text-align: center; background: rgba(0,0,0,0.15); border-radius: 8px;">
+                  <div style="font-size: 1.1rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="resp-mime">-</div>
+                  <div style="font-size: 0.65rem; color: var(--text-muted);">Content-Type</div>
+                </div>
+              </div>
+
+              <div class="editor-container" style="height: 180px; margin-bottom: 1rem;">
+                <div class="editor-header">
+                  <span>Response Body Data</span>
+                  <button class="btn btn-secondary btn-sm" id="btn-import-resp" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Import to Diag</button>
+                </div>
+                <div class="editor-body">
+                  <div class="editor-textarea editor-readonly" id="resp-body-text"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 5: PAYLOAD COMPARATOR -->
+      <section id="page-diff" class="page">
+        <!-- Editors Side-By-Side -->
+        <div class="diff-view-container">
+          <div class="card">
+            <div class="card-title">Payload A (Baseline)</div>
+            <div class="editor-container" style="height: 250px;">
+              <textarea class="editor-textarea" id="diff-payload-a" placeholder="Enter baseline JSON/XML..."></textarea>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Payload B (Comparison)</div>
+            <div class="editor-container" style="height: 250px;">
+              <textarea class="editor-textarea" id="diff-payload-b" placeholder="Enter new JSON/XML..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+          <button class="btn btn-accent" id="btn-compare-payloads"><i class="fa-solid fa-code-branch"></i> Compare Structures</button>
+        </div>
+
+        <!-- Comparison Output -->
+        <div class="card diff-results-card">
+          <div class="card-title">Structural Drift Report</div>
+          <div id="diff-empty-state" style="text-align: center; padding: 4rem 1rem; color: var(--text-muted);">
+            <i class="fa-solid fa-shuffle" style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--warning);"></i>
+            <p>Perform comparison to identify keys added, paths deleted, or data type changes.</p>
+          </div>
+          <div id="diff-results-container" style="display: none;">
+            <div class="grid-4" style="margin-bottom: 1.5rem;">
+              <div class="card" style="padding: 0.75rem; text-align: center; background: rgba(0,0,0,0.15);">
+                <div style="font-size: 1.25rem; font-weight: 700; color: var(--success);" id="diff-sum-added">0</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Added Paths</div>
+              </div>
+              <div class="card" style="padding: 0.75rem; text-align: center; background: rgba(0,0,0,0.15);">
+                <div style="font-size: 1.25rem; font-weight: 700; color: var(--danger);" id="diff-sum-deleted">0</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Deleted Paths</div>
+              </div>
+              <div class="card" style="padding: 0.75rem; text-align: center; background: rgba(0,0,0,0.15);">
+                <div style="font-size: 1.25rem; font-weight: 700; color: var(--warning);" id="diff-sum-modified">0</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Modified Values</div>
+              </div>
+              <div class="card" style="padding: 0.75rem; text-align: center; background: rgba(0,0,0,0.15);">
+                <div style="font-size: 1.25rem; font-weight: 700; color: var(--critical);" id="diff-sum-drifted">0</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Schema Type Drift</div>
+              </div>
+            </div>
+            <div class="diff-list" id="diff-breakdown-list">
+              <!-- Diff list elements -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 6: SCHEMA HUB -->
+      <section id="page-schema" class="page">
+        <div class="schema-hint-box">
+          <i class="fa-solid fa-circle-info" style="color: var(--accent-cyan);"></i> Generate standard JSON Schemas or simplified XML structural maps directly from loaded payload inputs. You can also specify custom schema specifications to validate your payload.
+        </div>
+
+        <div class="schema-grid">
+          <!-- Schema Input & Generator -->
+          <div class="card">
+            <div class="card-title">Payload Core</div>
+            <div class="editor-container" style="height: 320px; margin-bottom: 1rem;">
+              <div class="editor-header">
+                <span>Payload Data</span>
+              </div>
+              <div class="editor-body">
+                <textarea class="editor-textarea" id="schema-payload-input" placeholder="Paste data here..."></textarea>
+              </div>
+              <div class="editor-footer">
+                <button class="btn btn-secondary btn-sm" id="btn-schema-load-sample">Load Sample</button>
+                <button class="btn btn-sm" id="btn-generate-schema"><i class="fa-solid fa-gears"></i> Generate Schema</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Generated Schema Output / Validation Custom Schema -->
+          <div class="card">
+            <div class="card-title">
+              <span>Schema Specification</span>
+              <button class="btn btn-secondary btn-sm" id="btn-run-validation"><i class="fa-solid fa-shield-halved"></i> Validate Payload</button>
+            </div>
+            
+            <div class="editor-container" style="height: 320px; margin-bottom: 1rem;">
+              <div class="editor-header">
+                <span>Schema Definition (JSON Schema Draft-07 / XML Schema XSD)</span>
+              </div>
+              <div class="editor-body">
+                <textarea class="editor-textarea" id="schema-def-input" placeholder="Paste validation schema here, or hit Generate Schema..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schema Validation Result -->
+        <div class="card" id="schema-val-result-card" style="display: none; margin-top: 1.5rem;">
+          <div class="card-title" id="schema-val-title">Schema Validation Result</div>
+          <div id="schema-val-box" style="padding: 1rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem; font-weight: 500;">
+            <!-- Message dynamic -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- JavaScript Code -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
